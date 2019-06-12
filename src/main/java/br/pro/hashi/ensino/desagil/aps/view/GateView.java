@@ -21,6 +21,8 @@ public class GateView extends FixedPanel implements ItemListener {
     private final Switch[] switches;
     private final Gate gate;
     private final JCheckBox[] inputBoxes;
+    private final JCheckBox[] outputBoxes;
+
     private final Image image;
 
     public GateView(Gate gate) {
@@ -40,15 +42,26 @@ public class GateView extends FixedPanel implements ItemListener {
             gate.connect(i, switches[i]);
         }
 
-        int x, y, step;
+        int outputSize = gate.getOutputSize();
 
-        x = BORDER;
-        y = -(SWITCH_SIZE / 2);
-        step = (GATE_HEIGHT / (inputSize + 1));
-        for (JCheckBox inputBox : inputBoxes) {
-            y += step;
-            add(inputBox, x, y, SWITCH_SIZE, SWITCH_SIZE);
+        outputBoxes = new JCheckBox[outputSize];
+
+        for (int i = 0; i < outputSize; i++) {
+            outputBoxes[i] = new JCheckBox();
+            outputBoxes[i].setEnabled(false);
+
         }
+
+        int xinp, yinp, stepinp;
+
+        xinp = BORDER;
+        yinp = -(SWITCH_SIZE / 2);
+        stepinp = (GATE_HEIGHT / (inputSize + 1));
+        for (JCheckBox inputBox : inputBoxes) {
+            yinp += stepinp;
+            add(inputBox, xinp, yinp, SWITCH_SIZE, SWITCH_SIZE);
+        }
+
 
         String name = gate.toString() + ".png";
         URL url = getClass().getClassLoader().getResource(name);
@@ -70,6 +83,11 @@ public class GateView extends FixedPanel implements ItemListener {
             }
         }
 
+        for (int i=0; i<outputBoxes.length; i++) {
+            boolean result = gate.read(i);
+            outputBoxes[i].setSelected(result);
+        }
+
         repaint();
     }
 
@@ -84,12 +102,27 @@ public class GateView extends FixedPanel implements ItemListener {
 
         g.drawImage(image, BORDER + SWITCH_SIZE, 0, GATE_WIDTH, GATE_HEIGHT, this);
 
-        if (gate.read()) {
-            g.setColor(Color.RED);
-        } else {
-            g.setColor(Color.BLACK);
+        int outputSize = gate.getOutputSize();
+
+        int xout, yout, stepout;
+
+        xout = BORDER + SWITCH_SIZE + GATE_WIDTH;
+        yout = -(SWITCH_SIZE / 2) + 3;
+        stepout = (GATE_HEIGHT / (outputSize + 1));
+        for (int i=0; i <outputBoxes.length; i++) {
+            boolean result = gate.read(i);
+
+            if (result) {
+                yout += stepout;
+                g.setColor(Color.RED);
+                g.fillOval(xout, yout, LIGHT_SIZE, LIGHT_SIZE);
+            }
+            else {
+                yout += stepout;
+                g.setColor(Color.BLACK);
+                g.fillOval(xout, yout, LIGHT_SIZE, LIGHT_SIZE);
+            }
         }
-        g.fillOval(BORDER + SWITCH_SIZE + GATE_WIDTH, (GATE_HEIGHT - LIGHT_SIZE) / 2, LIGHT_SIZE, LIGHT_SIZE);
 
         getToolkit().sync();
     }
